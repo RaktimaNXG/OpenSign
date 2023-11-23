@@ -16,7 +16,8 @@ import {
   getBase64FromIMG,
   contractUsers,
   contactBook,
-  contractDocument
+  contractDocument,
+  pdfNewWidthFun
 } from "../utils/Utils";
 import Tour from "reactour";
 import Signedby from "./component/signedby";
@@ -75,6 +76,7 @@ function EmbedPdfImage() {
   const index = xyPostion.findIndex((object) => {
     return object.pageNumber === pageNumber;
   });
+
   const divRef = useRef(null);
   const senderUser = localStorage.getItem(
     `Parse/${localStorage.getItem("parseAppId")}/currentUser`
@@ -88,15 +90,12 @@ function EmbedPdfImage() {
   //check isGuestSigner is present in local if yes than handle login flow header in mobile view
   const isGuestSigner = localStorage.getItem("isGuestSigner");
   useEffect(() => {
-    const clientWidth = window.innerWidth;
-    const pdfWidth = clientWidth - 160 - 220 - 30;
-    //160 is width of left side, 200 is width of right side component and 50 is space of middle compoent
-    //pdf from left and right component
-    setPdfNewWidth(pdfWidth);
     getDocumentDetails();
   }, []);
   useEffect(() => {
     if (divRef.current) {
+      const pdfWidth = pdfNewWidthFun(divRef);
+      setPdfNewWidth(pdfWidth);
       setContainerWH({
         width: divRef.current.offsetWidth,
         height: divRef.current.offsetHeight

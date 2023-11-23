@@ -299,3 +299,11 @@ export const contactBook = async (objectId) => {
     });
   return result;
 };
+
+export const pdfNewWidthFun = (divRef) => {
+  const clientWidth = divRef.current.offsetWidth;
+  const pdfWidth = clientWidth - 160 - 200;
+  //160 is width of left side, 200 is width of right side component and 50 is space of middle compoent
+  //pdf from left and right component
+  return pdfWidth;
+};

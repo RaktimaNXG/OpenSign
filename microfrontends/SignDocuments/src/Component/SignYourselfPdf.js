@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, degrees } from "pdf-lib";
 import "../css/./signature.css";
 import sign from "../assests/sign3.png";
 import stamp from "../assests/stamp2.png";
@@ -15,7 +15,11 @@ import EmailComponent from "./component/emailComponent";
 import FieldsComponent from "./component/fieldsComponent";
 import Modal from "react-bootstrap/Modal";
 import ModalHeader from "react-bootstrap/esm/ModalHeader";
-import { contractDocument, getBase64FromIMG } from "../utils/Utils";
+import {
+  contractDocument,
+  getBase64FromIMG,
+  pdfNewWidthFun
+} from "../utils/Utils";
 import { useParams } from "react-router-dom";
 import Tour from "reactour";
 import { onSaveImage, onSaveSign } from "../utils/Utils";
@@ -73,7 +77,7 @@ function SignYourSelf() {
     status: false,
     type: "load"
   });
-
+  const divRef = useRef(null);
   const nodeRef = useRef(null);
   const [{ isOver }, drop] = useDrop({
     accept: "BOX",
@@ -160,16 +164,20 @@ function SignYourSelf() {
   const jsonSender = JSON.parse(senderUser);
 
   useEffect(() => {
-    const clientWidth = window.innerWidth;
-    const value = docId ? 80 : 80;
-    const pdfWidth = clientWidth - 160 - 200 - value;
-    //160 is width of left side, 200 is width of right side component and 50 is space of middle compoent
-    //pdf from left and right component
-    setPdfNewWidth(pdfWidth);
     if (documentId) {
       getDocumentDetails();
     }
   }, []);
+
+  useEffect(() => {
+    if (divRef.current) {
+      const pdfWidth = pdfNewWidthFun(divRef);
+      setPdfNewWidth(pdfWidth);
+      if (documentId) {
+        getDocumentDetails();
+      }
+    }
+  }, [divRef.current]);
 
   //function for get document details for perticular signer with signer'object id
   const getDocumentDetails = async () => {
@@ -485,7 +493,7 @@ function SignYourSelf() {
                   ""
                 );
                 //function for call to embed signature in pdf and get digital signature pdf
-                signPdfFun(newImgUrl, documentId, data, pdfBase64, pageNo);
+                // signPdfFun(newImgUrl, documentId, data, pdfBase64, pageNo);
               })
               .catch((error) => {
                 console.error("Error:", error);
@@ -572,6 +580,8 @@ function SignYourSelf() {
                 return page.getHeight() - imgUrlList[id].yPosition - imgHeight;
               }
             };
+            console.log("page", page.getHeight());
+            page.setRotation(degrees(0));
             page.drawImage(img, {
               x: isMobile
                 ? imgUrlList[id].xPosition * scale + imgWidth / 2
@@ -583,7 +593,8 @@ function SignYourSelf() {
           });
         }
         const pdfBytes = await pdfDoc.saveAsBase64({ useObjectStreams: false });
-        signPdfFun(pdfBytes, documentId);
+        console.log("bdfbyte", pdfBytes);
+        // signPdfFun(pdfBytes, documentId);
       }
       setIsSignPad(false);
       setIsEmail(true);
@@ -670,7 +681,7 @@ function SignYourSelf() {
       const containerRect = document
         .getElementById("container")
         .getBoundingClientRect();
-
+      console.log("container", dragElement);
       const ybottom = containerRect.height - dragElement.y;
 
       if (dragKey >= 0) {
@@ -716,6 +727,7 @@ function SignYourSelf() {
     };
     setPdfLoadFail(load);
     pdf.getPage(1).then((pdfPage) => {
+      // console.log("pdfPage",pdfPage.view)
       const pageWidth = pdfPage.view[2];
 
       setPdfOriginalWidth(pageWidth);
@@ -988,7 +1000,7 @@ function SignYourSelf() {
       ) : noData ? (
         <Nodata />
       ) : (
-        <div className="signatureContainer">
+        <div className="signatureContainer" ref={divRef}>
           {/* this component used for UI interaction and show their functionality */}
           {pdfLoadFail && !checkTourStatus && (
             <Tour
